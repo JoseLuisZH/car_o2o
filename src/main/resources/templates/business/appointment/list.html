@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="common/include :: header('养修信息预约')"/>
+</head>
+<body class="gray-bg">
+<div class="container-div">
+    <div class="row">
+        <div class="col-sm-12 search-collapse">
+            <form id="appointment-form">
+                <div class="select-list">
+                    <ul>
+                        <li>
+                            客户名称：<input type="text" name="customerName"/>
+                        </li>
+                        <li>
+                            联系方式：<input type="text" name="customerPhone"/>
+                        </li>
+
+                        <li>
+                            状态：<select name="status" th:with="type=${@dict.getType('cmi_status')}">
+                            <option value="">所有</option>
+                            <option th:each="dict : ${type}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                        </select>
+                        </li>
+                        <li>
+                            <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i
+                                    class="fa fa-search"></i>&nbsp;搜索</a>
+                            <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i
+                                    class="fa fa-refresh"></i>&nbsp;重置</a>
+                        </li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+
+        <div class="btn-group-sm" id="toolbar" role="group">
+            <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="system:customer:add">
+                <i class="fa fa-plus"></i> 新增
+            </a>
+        </div>
+
+        <div class="col-sm-12 select-table table-striped">
+            <table id="bootstrap-table"></table>
+        </div>
+    </div>
+</div>
+<th:block th:include="common/include :: footer"/>
+
+<script th:inline="javascript">
+
+    var prefix = ctx + "/business/appointment";
+    $(function () {
+        var statusDatas = [[${@dict.getType('cmi_status')}]];
+        var serviceTypeDatas = [[${@dict.getType('cmi_service_type')}]];
+        var options = {
+            url: prefix + "/query",
+            createUrl: prefix + "/addPage",
+            updateUrl: prefix + "/editPage?id={id}",
+            removeUrl: prefix + "/remove",
+            modalName: "养修服务",
+            columns: [{
+                checkbox: true
+            },
+                {
+                    field: 'id',
+                    title: '养修服务id',
+                    visible: false
+                },
+                {
+                    field: 'customerName',
+                    title: '客户姓名',
+                    sortable: true
+                },
+                {
+                    field: 'customerPhone',
+                    title: '客户联系方式',
+                    sortable: true
+                },
+                {
+                    field: 'appointmentTime',
+                    title: '预约时间',
+                    sortable: true
+                },
+                {
+                    field: 'actualArrivalTime',
+                    title: '实际到店时间',
+                    sortable: true
+                },
+                {
+                    field: 'licensePlate',
+                    title: '车牌号码',
+                    sortable: true
+                },
+                {
+                    field: 'carSeries',
+                    title: '汽车类型',
+                    sortable: true
+                },
+                {
+                    field: 'serviceType',
+                    title: '客户服务类型',
+                    sortable: true,
+                    formatter: function (value, item, index) {
+                        return $.table.selectDictLabel(serviceTypeDatas, value);
+                    }
+                },
+                {
+                    field: 'createTime',
+                    title: '创建时间',
+                    sortable: true
+                },
+                {
+                    field: 'info',
+                    title: '备注',
+                    sortable: true,
+                    formatter: function (value, row, index) {
+                        return $.table.tooltip(value, 5, "open");
+                    }
+                },
+                {
+                    field: 'status',
+                    title: '状态',
+                    sortable: true,
+                    formatter: function (value, item, index) {
+                        return $.table.selectDictLabel(statusDatas, value);
+                    }
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function (value, row, index) {
+                        var editFlag = row.status == 0 ? '' : 'disabled';
+                        var arrivalFlag = row.status == 0 ? '' : 'disabled';
+                        var settlementFlag = row.status == 1 || row.status == 4 ? '' : 'disabled';
+                        var cancelFlag = row.status == 0 ? '' : 'disabled';
+                        var deleteFlag = row.status == 0 ? '' : 'disabled';
+
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs '+editFlag+'" href="javascript:void(0)"' +
+                            ' onclick="$.operate.edit(\'' + row.id + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+
+                        actions.push('<a class="btn btn-danger btn-xs '+arrivalFlag+' " href="javascript:void(0)" ' +
+                            'onclick="arrivalShop(\'' + row.id + '\')"><i class="fa"></i>到店</a> ');
+
+                        actions.push('<a class="btn btn-success btn-xs '+settlementFlag+'" href="javascript:void(0)"' +
+                            ' onclick="detailList(\'' + row.id + '\')"><i class="fa fa-edit"></i>结算单</a> ');
+
+                        var more = [];
+                        more.push("<a class='btn btn-default btn-xs "+cancelFlag+" ' href='javascript:void(0)' onclick='cancelApp(" + row.id + ")'><i class='fa fa-info-circle'></i>取消</a> ");
+                        more.push("<a class='btn btn-default btn-xs "+deleteFlag+"' href='javascript:void(0)' onclick='$.operate.remove(" + row.id + ")'><i class='fa fa-remove'></i>删除</a>");
+
+                        actions.push('<a tabindex="0" class="btn btn-info btn-xs" role="button" data-container="body" data-placement="left" data-toggle="popover" data-html="true" data-trigger="hover" data-content="' + more.join('') + '"><i class="fa fa-chevron-circle-right"></i>更多操作</a>');
+
+                        return actions.join('');
+                    }
+                }]
+        };
+        $.table.init(options);
+    });
+    function arrivalShop(id) {
+        $.modal.confirm("确定到店了吗？",function () {
+            $.operate.get(prefix + "/arrivalShop?id=" + id);
+        })
+    }
+
+    function cancelApp(id) {
+        $.modal.confirm("确定取消吗？", function () {
+            $.operate.get(prefix + "/cancelApp?id=" + id);
+        })
+    }
+    function detailList(id) {
+        $.modal.confirm("是否进行结算",function () {
+            $.get("/business/appointment/generateStatementId?id=" +id,function (result) {
+                $.modal.openTab("结算单明细页面","/business/statementItem/itemDetail?statementId=" + result.data)
+            })
+        })
+    }
+</script>
+</body>
+</html>

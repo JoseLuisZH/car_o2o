@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="common/include :: header('结算单明细列表')"/>
+</head>
+<body class="gray-bg">
+<div class="ui-layout-center">
+    <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <div class="col-sm-12">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">客户姓名：</label>
+                            <label class="col-sm-6 control-label">[[${statement.customerName}]]</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">联系方式：</label>
+                            <label class="col-sm-6 control-label">[[${statement.customerPhone}]]</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12">
+
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">车牌号码：</label>
+                            <label class="col-sm-6 control-label">[[${statement.licensePlate}]]</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">汽车类型：</label>
+                            <label class="col-sm-6 control-label">[[${statement.carSeries}]]</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">服务类型：</label>
+                            <label class="col-sm-6 control-label">[[${@dict.getLabel('si_service_catalog',statement.serviceType)}]]</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">到店时间：</label>
+                            <label class="col-sm-6 control-label"
+                                   th:text="${#dates.format(statement.actualArrivalTime, 'yyyy-MM-dd HH:mm')}"></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">总消费金额：</label>
+                            <label class="col-sm-6 control-label" id="totalAmount">[[${statement.totalAmount}]]</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">实付价格：</label>
+                            <label class="col-sm-6 control-label" id="actuallyPaid">[[${statement.totalAmount-statement.discountAmount}]]</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">优惠价格：</label>
+                            <label class="col-sm-6 control-label">[[${statement.discountAmount}]]</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">收款人：</label>
+                            <label class="col-sm-6 control-label">[[${userName}]]</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">备注信息：</label>
+                            <label class="col-sm-6 control-label">[[${statement.info}]]</label>
+                        </div>
+                    </div>
+            </div>
+            <div class="btn-group-sm" id="MyTools" role="group">
+                <a id="saveBtn" class="btn btn-success">
+                    <i class="fa fa-plus"></i> 打印
+                </a>
+                <a id="payBtn" class="btn btn-warning">
+                    <i class="fa fa-folder-open"></i> 导出
+                </a>
+
+            </div>
+            <div class="col-sm-12 select-table table-striped">
+                <table id="statementTable"></table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:include="common/include :: footer"/>
+<th:block th:include="common/include :: layout-latest"/>
+<script th:inline="javascript">
+    var prefix = ctx + "/business/serviceItem";
+    $(function () {
+        // 服务单项清单
+        var statementId = [[${statement.id}]];
+        var options = {
+            id: "statementTable",
+            url: ctx + "/business/statementItem/query?statementId=" + statementId,
+            toolbar: "MyTools",
+            uniqueId: "id",
+            columns: [
+                {
+                    field: 'id',
+                    title: '服务单项id',
+                    visible: false
+                },
+                {
+                    field: 'itemName',
+                    title: '服务单项名称',
+                    sortable: true
+                },
+                {
+                    field: 'itemPrice',
+                    title: '服务单项原价',
+                    sortable: true
+                },
+                {
+                    field: 'itemQuantity',
+                    title: '购买数量',
+                    sortable: true
+                }]
+        };
+        $.table.init(options);
+    });
+</script>
+
+</body>
+</html>

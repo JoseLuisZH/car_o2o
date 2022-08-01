@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="common/include :: header('修改流程定义')"/>
+    <style>
+        .myFileInput {
+            border: 1px solid;
+        }
+    </style>
+</head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <form class="form-horizontal m" id="form-bpmnInfo-edit">
+        <input type="hidden" name="path" id="bpmnInfoPath">
+        <div class="form-group">
+            <label class="col-sm-3 control-label"></label>
+            <div class="col-sm-8">
+                <div class="fileinput fileinput-new myFileInput" id="uploadBtn" data-provides="fileinput">
+                  <span class="btn btn-outline-secondary btn-file">
+                    <span class="fileinput-new">选择文件</span>
+                    <span class="fileinput-exists">Change</span>
+                    <input type="file" name="file" id="bpmnInfoinition" multiple>
+                  </span>
+                    <span class="fileinput-filename"></span>
+                    <a href="#" class="close fileinput-exists" data-dismiss="fileinput" style="float: none">&times;</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label">流程类型：</label>
+            <div class="col-sm-8">
+                <select name="bpmnType" class="form-control m-b" th:with="type=${@dict.getType('bus_audit_type')}">
+                    <option th:each="dict : ${type}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label">备注信息：</label>
+            <div class="col-sm-8">
+                <textarea name="info" class="form-control"></textarea>
+            </div>
+        </div>
+    </form>
+</div>
+<th:block th:include="common/include :: footer"/>
+<th:block th:include="common/include :: jasny-bootstrap"/>
+<script th:inline="javascript">
+    var prefix = ctx + "/business/bpmnInfo";
+    $("#form-bpmnInfo-edit").validate({
+        focusCleanup: true
+    });
+
+    function submitHandler() {
+        if ($.validate.form()) {
+            $.operate.save(prefix + "/deploy", $('#form-bpmnInfo-edit').serialize());
+        }
+    }
+
+    $('#uploadBtn').on('change.bs.fileinput', function () {
+        var formData = new FormData();
+        formData.append("file", $('#bpmnInfoinition')[0].files[0]);
+        console.log(formData)
+        $.ajax({
+            url: prefix + '/upload',
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (result) {
+                if (result.code == 0) {
+                    $('#bpmnInfoPath').val(result.data);
+                }else {
+                    $.modal.msgError(result.msg);
+                    $('#uploadBtn').fileinput('clear');
+                }
+            }
+        })
+    })
+
+</script>
+</body>
+</html>
+u
